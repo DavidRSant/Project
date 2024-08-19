@@ -1,4 +1,4 @@
-Project
+
 Conclusion:
 
 The analysis demonstrates that implementing the proposed techniques, particularly the XGBoost model(special atention for Naive bayes in balanced data base with grid search), can significantly reduce maintenance costs for the company. The ability to accurately identify faulty trucks without incurring unnecessary maintenance expenses can lead to substantial savings.
