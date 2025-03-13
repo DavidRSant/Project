@@ -1,0 +1,11 @@
+The objective of this project was to compare the performance of two models using the same algorithm (Random Forest) for classifying/detecting anomalies in the W3 dataset. The first model was trained conventionally using Scikit-Learn and Pandas, while the other was trained using PySpark.
+
+Conclusions:
+We can conclude that opting for PySpark not only resulted in a greater generalization capacity of the algorithm but also made it possible to manage how much hardware would be allocated for the task, which proved useful when attempting to run the model on Colab.
+
+Despite the initially promising performance, further analysis revealed that the model was failing to detect some minority classes. To address this, weights had to be added to make the model "pay more attention to such classes," which resulted in a slight decrease in accuracy—however, in this case, prioritizing class balance was preferable.
+
+Observations:
+Regarding dataset consolidation, due to the large size of the dataset, it was not possible to load it into Google Colab using Pandas and FastParquet. To handle this, I used a dedicated machine with more RAM. However, I only realized after completing the project that it would have been better to use PySpark or another distributed library for this task.
+
+Additionally, other algorithms may be faster and could still be tested.
