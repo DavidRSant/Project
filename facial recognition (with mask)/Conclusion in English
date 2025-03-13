@@ -1,0 +1,15 @@
+Due to restrictions on GPU availability in Google Colab, I had to opt for a pre-trained model.
+
+In this case, I chose the ArcFace model: It is an advanced facial recognition technique that uses an angular margin loss function to enhance the discrimination of facial features in an embedding space. It is widely used for large-scale facial recognition tasks and is designed to accurately distinguish different individuals, even under challenging conditions such as wearing face masks.
+
+From the previous results, we can see that the model successfully completed the task, reporting the highest cosine similarity for the correct image in the database, leading to the correct identification of Marcelinho.
+
+Cosine similarity measures the "angle" between two vectors in a vector space rather than measuring linear distance. The idea is that the closer the vectors are in terms of direction, the more similar they are, regardless of their length or magnitude.
+
+In practice, in facial recognition problems, cosine similarity is often normalized to a range of [0,1], where:
+
+Close to 1: High similarity between the two vectors.
+Close to 0: Low similarity between the two vectors.
+Therefore, we can conclude that a similarity score of 0.4285 can be considered relatively low; in other words, the result can still be improved.
+
+One possible improvement would be fine-tuning the model. However, this would require adjusting its hyperparameters and retrain the model before extracting the embeddings, which would demand GPU usage.
