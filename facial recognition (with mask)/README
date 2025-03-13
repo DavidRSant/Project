@@ -1,3 +1,5 @@
+This project was a technical case study that I worked on. The objective was to train a model to recognize a person's face while wearing a mask among a database of celebrities with and without masks.
+
 Due to restrictions on GPU availability in Google Colab, I had to opt for a pre-trained model.
 
 In this case, I chose the ArcFace model: It is an advanced facial recognition technique that uses an angular margin loss function to enhance the discrimination of facial features in an embedding space. It is widely used for large-scale facial recognition tasks and is designed to accurately distinguish different individuals, even under challenging conditions such as wearing face masks.
