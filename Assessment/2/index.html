@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Lookup</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f1f1f1;
+      font-family: sans-serif;
+    }
+    input, select, button {
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      border: 1px solid #444;
+      margin: 4px;
+    }
+    a {
+      color: #90caf9;
+    }
+    li {
+      border: 1px solid #333;
+      padding: 10px;
+      margin: 10px 0;
+      list-style: none;
+      border-radius: 6px;
+    }
+    .weather-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .weather-info {
+      flex-grow: 1;
+    }
+    .actions a, .actions button {
+      margin-right: 10px;
+    }
+    .chart-container {
+      margin-top: 40px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather Lookup</h1>
+
+  <form id="weather-form">
+    <label>Location: <input type="text" id="location" required></label>
+    <label>Start Date: <input type="date" id="start_date" required></label>
+    <label>End Date: <input type="date" id="end_date" required></label>
+    <button type="submit">Fetch Weather</button>
+  </form>
+
+  <h2>Saved Records</h2>
+  <label>Filter by City: <input type="text" id="filter_city" oninput="fetchWeatherRecords()"></label>
+  <button onclick="exportCSV()">Export to CSV</button>
+  <ul id="weather-list"></ul>
+
+  <div class="chart-container">
+    <h2>Average Temperature by City</h2>
+    <canvas id="tempChart" width="600" height="300"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const API_URL = "http://localhost:8001/weather";
+
+    let weatherData = [];
+
+    async function fetchWeatherRecords() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const list = document.getElementById("weather-list");
+      const filterCity = document.getElementById("filter_city").value.toLowerCase();
+      list.innerHTML = "";
+      weatherData = data;
+
+      const filtered = data.filter(item =>
+        item.location.toLowerCase().includes(filterCity)
+      );
+
+      filtered.forEach(item => {
+        const li = document.createElement("li");
+
+        const weather = item.weather_data.weather?.[0] || {};
+        const temp = item.weather_data.main?.temp;
+        const iconUrl = weather.icon ? `http://openweathermap.org/img/wn/${weather.icon}@2x.png` : "";
+
+        const location = document.createElement("div");
+        location.innerHTML = `<strong>📍 ${item.location}</strong> (${item.start_date} to ${item.end_date})`;
+
+        const card = document.createElement("div");
+        card.className = "weather-card";
+
+        if (iconUrl) {
+          const icon = document.createElement("img");
+          icon.src = iconUrl;
+          icon.alt = weather.description || "";
+          icon.width = 50;
+          card.appendChild(icon);
+        }
+
+        const info = document.createElement("div");
+        info.className = "weather-info";
+        info.innerHTML = `${weather.main || "?"} - ${weather.description || ""}<br>🌡️ ${temp} °C`;
+        card.appendChild(info);
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const ytLink = document.createElement("a");
+        ytLink.href = `https://www.youtube.com/results?search_query=weather+${encodeURIComponent(item.location)}`;
+        ytLink.target = "_blank";
+        ytLink.textContent = "YouTube";
+
+        const mapLink = document.createElement("a");
+        mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`;
+        mapLink.target = "_blank";
+        mapLink.textContent = "Map";
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.onclick = () => deleteRecord(item.id);
+
+        actions.appendChild(ytLink);
+        actions.appendChild(mapLink);
+        actions.appendChild(delBtn);
+
+        li.appendChild(location);
+        li.appendChild(card);
+        li.appendChild(actions);
+        list.appendChild(li);
+      });
+
+      renderCharts(filtered);
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm("Do you really want to delete this record?")) return;
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      fetchWeatherRecords().then(() => console.log('Weather data loaded and chart updated.'));
+    }
+
+    document.getElementById("weather-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const location = document.getElementById("location").value;
+      const start_date = document.getElementById("start_date").value;
+      const end_date = document.getElementById("end_date").value;
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location, start_date, end_date })
+      });
+
+      if (res.ok) {
+        alert("Weather saved successfully!");
+        fetchWeatherRecords().then(() => console.log('Weather data loaded and chart updated.'));
+      } else {
+        const err = await res.json();
+        alert("Error: " + err.detail);
+      }
+    });
+
+    function exportCSV() {
+      const rows = [
+        ["ID", "Location", "Start Date", "End Date", "Requested At", "Weather", "Description", "Temp (°C)"]
+      ];
+
+      weatherData.forEach(item => {
+        const weather = item.weather_data.weather?.[0] || {};
+        const temp = item.weather_data.main?.temp || "";
+        rows.push([
+          item.id,
+          item.location,
+          item.start_date,
+          item.end_date,
+          item.requested_at,
+          weather.main || "",
+          weather.description || "",
+          temp
+        ]);
+      });
+
+      const csv = rows.map(row => row.join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "weather_data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function renderCharts(data) {
+      const weatherTypes = {};
+      const cityTemps = {};
+
+      data.forEach(item => {
+        const weather = item.weather_data.weather?.[0]?.main || "Unknown";
+        weatherTypes[weather] = (weatherTypes[weather] || 0) + 1;
+
+        const city = item.location;
+        const temp = item.weather_data.main?.temp;
+        if (temp != null) {
+          if (!cityTemps[city]) cityTemps[city] = [];
+          cityTemps[city].push(temp);
+        }
+      });
+
+      const avgTemps = Object.entries(cityTemps).map(([city, temps]) => {
+        const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+        return { city, avg };
+      });
+
+
+
+      // Temp chart
+      const tempCtx = document.getElementById("tempChart").getContext("2d");
+      
+      if (window.tempChartInstance) window.tempChartInstance.destroy();
+      window.tempChartInstance = new Chart(tempCtx, {
+
+        type: "bar",
+        data: {
+          labels: avgTemps.map(e => e.city),
+          datasets: [{
+            label: "Average Temp (°C)",
+            data: avgTemps.map(e => e.avg),
+            backgroundColor: "rgba(255, 193, 7, 0.7)",
+            borderColor: "rgba(255, 152, 0, 1)",
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    fetchWeatherRecords().then(() => console.log('Weather data loaded and chart updated.'));
+  </script>
+</body>
+</html>

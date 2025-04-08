@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather App</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    .weather-icon { width: 50px; vertical-align: middle; }
+    .forecast-day { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Weather App</h1>
+  <input type="text" id="locationInput" placeholder="Enter city or ZIP" />
+  <button onclick="getWeather()">Current Weather</button>
+  <button onclick="getForecast()">5-Day Forecast</button>
+  <div id="result"></div>
+  <div id="forecast"></div>
+
+  <script>
+    const apiBase = "http://127.0.0.1:8001";
+
+    async function getWeather() {
+      const location = document.getElementById("locationInput").value;
+      const res = await fetch(`${apiBase}/weather?city=${location}`);
+      const data = await res.json();
+      document.getElementById("forecast").innerHTML = "";
+
+      if (data.error) {
+        document.getElementById("result").innerHTML = `<p style='color:red'>${data.error}</p>`;
+        return;
+      }
+
+      document.getElementById("result").innerHTML = `
+        <h2>Current Weather in ${data.location}</h2>
+        <img src="${data.icon}" class="weather-icon" />
+        <p><strong>${data.description}</strong></p>
+        <p>Temperature: ${data.temperature} °C</p>
+        <p>Feels like: ${data.feels_like} °C</p>
+        <p>Humidity: ${data.humidity}%</p>
+        <p>Wind: ${data.wind_speed} m/s</p>
+      `;
+    }
+
+    async function getForecast() {
+      const location = document.getElementById("locationInput").value;
+      const res = await fetch(`${apiBase}/forecast?city=${location}`);
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById("forecast").innerHTML = `<p style='color:red'>${data.error}</p>`;
+        return;
+      }
+
+      let html = `<h2>5-Day Forecast for ${data.location}</h2>`;
+      data.forecast.forEach(day => {
+        html += `
+          <div class="forecast-day">
+            <strong>${day.date}</strong><br />
+            <img src="${day.icon}" class="weather-icon" />
+            ${day.description}<br />
+            Temp: ${day.temperature} °C, Feels like: ${day.feels_like} °C
+          </div>
+        `;
+      });
+
+      document.getElementById("forecast").innerHTML = html;
+    }
+  </script>
+</body>
+</html>
