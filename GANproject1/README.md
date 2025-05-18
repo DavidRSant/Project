@@ -1,4 +1,4 @@
-# README: Comparative Study of Generative Models for Facial Image Synthesis
+# Comparative Study of Generative Models for Facial Image Synthesis
 
 ##  Overview
 This project presents a comparative study between two Generative Adversarial Network (GAN) architectures:
